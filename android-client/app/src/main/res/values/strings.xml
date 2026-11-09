@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">БобрОГЭ</string>
+    <string name="btn_login">Войти в лес</string>
+    <string name="btn_register">Стать бобром</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Пароль</string>
+</resources>
