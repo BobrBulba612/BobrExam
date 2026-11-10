@@ -14,10 +14,13 @@ public class Task {
 
     private String subject;
     private String examType;
+    
+    @Column(name = "exam_year")
     private Integer year;
+    
     private String topic;
     private Integer difficulty;
-    private String type; // multiple_choice, text_input, etc.
+    private String type;
     
     @Column(columnDefinition = "TEXT")
     private String questionText;
