@@ -1,9 +1,0 @@
-fastapi
-uvicorn[standard]
-sqlalchemy
-pydantic[email]
-PyJWT
-passlib[bcrypt]
-httpx
-python-dotenv
-email-validator
