@@ -6,7 +6,6 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
-import retrofit2.http.Path;
 
 public interface ApiService {
 
@@ -19,9 +18,12 @@ public interface ApiService {
     @GET("api/user/me")
     Call<UserProfile> getMyProfile(@Header("Authorization") String token);
 
-    @GET("api/courses/{exam}/{subject}/path")
-    Call<List<TaskDto>> getPath(@Path("exam") String exam,
-                                @Path("subject") String subject);
+    @POST("api/user/setup")
+    Call<UserProfile> setup(@Header("Authorization") String token,
+                            @Body SetupRequest body);
+
+    @GET("api/course/my")
+    Call<List<CourseUnit>> getMyCourse(@Header("Authorization") String token);
 
     @POST("api/progress/submit")
     Call<SubmitResponse> submit(@Header("Authorization") String token,
@@ -35,9 +37,7 @@ public interface ApiService {
         public String nickname;
         public String password;
         public RegisterRequest(String e, String n, String p) {
-            email = e;
-            nickname = n;
-            password = p;
+            email = e; nickname = n; password = p;
         }
     }
 
@@ -45,8 +45,7 @@ public interface ApiService {
         public String email;
         public String password;
         public LoginRequest(String e, String p) {
-            email = e;
-            password = p;
+            email = e; password = p;
         }
     }
 
@@ -60,16 +59,26 @@ public interface ApiService {
         public String email;
         public String nickname;
         public String examType;
+        public Integer grade;
         public String subjects;
         public int xp;
         public int streak;
         public int hearts;
     }
 
+    class SetupRequest {
+        public int grade;
+        public List<String> subjects;
+        public SetupRequest(int g, List<String> s) {
+            grade = g; subjects = s;
+        }
+    }
+
     class TaskDto {
         public String id;
         public String subject;
         public String examType;
+        public int grade;
         public int examNumber;
         public String topic;
         public int difficulty;
@@ -79,12 +88,17 @@ public interface ApiService {
         public String source;
     }
 
+    class CourseUnit {
+        public String subject;
+        public int grade;
+        public List<TaskDto> tasks;
+    }
+
     class SubmitRequest {
         public String taskId;
         public String userAnswer;
         public SubmitRequest(String t, String u) {
-            taskId = t;
-            userAnswer = u;
+            taskId = t; userAnswer = u;
         }
     }
 
@@ -103,11 +117,7 @@ public interface ApiService {
         public String taskText;
         public String userAnswer;
         public AiRequest(String id, String e, String s, String t, String u) {
-            taskId = id;
-            examType = e;
-            subject = s;
-            taskText = t;
-            userAnswer = u;
+            taskId = id; examType = e; subject = s; taskText = t; userAnswer = u;
         }
     }
 

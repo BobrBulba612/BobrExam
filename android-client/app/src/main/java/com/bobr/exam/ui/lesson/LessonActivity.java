@@ -1,6 +1,5 @@
 package com.bobr.exam.ui.lesson;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -8,19 +7,13 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.bobr.exam.R;
 import com.bobr.exam.data.remote.ApiService;
-
 import org.json.JSONArray;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.inject.Inject;
-
 import dagger.hilt.android.AndroidEntryPoint;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -42,15 +35,14 @@ public class LessonActivity extends AppCompatActivity {
     private int xp = 0;
 
     private String token() {
-        SharedPreferences sp = getSharedPreferences("bobr", MODE_PRIVATE);
-        return "Bearer " + sp.getString("jwt", "");
+        return "Bearer " + getSharedPreferences("bobr", MODE_PRIVATE)
+                .getString("jwt", "");
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lesson);
-
         tvQuestion = findViewById(R.id.tvQuestion);
         tvHearts = findViewById(R.id.tvHearts);
         tvXp = findViewById(R.id.tvXp);
@@ -61,20 +53,13 @@ public class LessonActivity extends AppCompatActivity {
         btnCheck = findViewById(R.id.btnCheck);
         btnAi = findViewById(R.id.btnAi);
 
-        String exam = getIntent().getStringExtra("exam");
         String subject = getIntent().getStringExtra("subject");
-        if (exam == null) {
-            exam = "ОГЭ";
-        }
-        if (subject == null) {
-            subject = "Математика";
-        }
+        if (subject == null) subject = "Математика";
 
         btnCheck.setOnClickListener(v -> check());
         btnAi.setOnClickListener(v -> askAi());
-
         stats();
-        load(exam, subject);
+        load(subject);
     }
 
     private void stats() {
@@ -82,29 +67,35 @@ public class LessonActivity extends AppCompatActivity {
         tvXp.setText("XP: " + xp);
     }
 
-    private void load(String exam, String subject) {
-        tvQuestion.setText("Загрузка заданий...");
-        api.getPath(exam, subject).enqueue(new Callback<List<ApiService.TaskDto>>() {
+    private void load(String subject) {
+        tvQuestion.setText("Бобр составляет курс...");
+        api.getMyCourse(token()).enqueue(new Callback<List<ApiService.CourseUnit>>() {
             @Override
-            public void onResponse(Call<List<ApiService.TaskDto>> c,
-                                   Response<List<ApiService.TaskDto>> r) {
+            public void onResponse(Call<List<ApiService.CourseUnit>> c,
+                                   Response<List<ApiService.CourseUnit>> r) {
                 if (r.isSuccessful() && r.body() != null && !r.body().isEmpty()) {
-                    tasks = r.body();
+                    for (ApiService.CourseUnit u : r.body()) {
+                        if (u.subject.equals(subject)) {
+                            tasks = u.tasks;
+                            break;
+                        }
+                    }
+                    if (tasks.isEmpty()) tasks = r.body().get(0).tasks;
                     show();
+                } else if (r.code() == 400) {
+                    tvQuestion.setText("Сначала выбери класс и предметы");
                 } else {
-                    tvQuestion.setText("Заданий нет. Выполни POST /api/seed/tasks");
+                    tvQuestion.setText("Курс пуст: " + r.code());
                 }
             }
             @Override
-            public void onFailure(Call<List<ApiService.TaskDto>> c, Throwable t) {
+            public void onFailure(Call<List<ApiService.CourseUnit>> c, Throwable t) {
                 tvQuestion.setText("Сеть: " + t.getMessage());
             }
         });
     }
 
-    private ApiService.TaskDto cur() {
-        return tasks.get(index);
-    }
+    private ApiService.TaskDto cur() { return tasks.get(index); }
 
     private void show() {
         if (index >= tasks.size()) {
@@ -147,10 +138,8 @@ public class LessonActivity extends AppCompatActivity {
     }
 
     private void check() {
-        if (tasks.isEmpty() || index >= tasks.size()) {
-            return;
-        }
-        final ApiService.TaskDto t = cur();
+        if (tasks.isEmpty() || index >= tasks.size()) return;
+        ApiService.TaskDto t = cur();
         String answer = etAnswer.getText().toString();
         if (answer.trim().isEmpty()) {
             Toast.makeText(this, "Введи ответ", Toast.LENGTH_SHORT).show();
@@ -160,11 +149,12 @@ public class LessonActivity extends AppCompatActivity {
         api.submit(token(), new ApiService.SubmitRequest(t.id, answer))
            .enqueue(new Callback<ApiService.SubmitResponse>() {
             @Override
-            public void onResponse(Call<ApiService.S         btnCheck.setEnabled(true);
+            public void onResponse(Call<ApiService.SubmitResponse> c,
+                                   Response<ApiService.SubmitResponse> r) {
+                btnCheck.setEnabled(true);
                 if (!r.isSuccessful() || r.body() == null) {
                     Toast.makeText(LessonActivity.this,
-                            "Сервер отклонил запрос: " + r.code(),
-                            Toast.LENGTH_LONG).show();
+                            "Сервер: " + r.code(), Toast.LENGTH_LONG).show();
                     return;
                 }
                 ApiService.SubmitResponse s = r.body();
@@ -193,9 +183,7 @@ public class LessonActivity extends AppCompatActivity {
     }
 
     private void askAi() {
-        if (tasks.isEmpty() || index >= tasks.size()) {
-            return;
-        }
+        if (tasks.isEmpty() || index >= tasks.size()) return;
         ApiService.TaskDto t = cur();
         String answer = etAnswer.getText().toString();
         tvAi.setText("Бобр-Профессор думает...");

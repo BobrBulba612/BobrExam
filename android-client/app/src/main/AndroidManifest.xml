@@ -1,28 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.bobr.exam">
-
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
-
     <application
         android:name=".BobrExamApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="БобрОГЭ"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:usesCleartextTraffic="true"
         android:theme="@style/Theme.BobrExam">
-        
-        <activity
-            android:name=".ui.auth.LoginActivity"
-            android:exported="true">
+        <activity android:name=".ui.auth.LoginActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
-        <activity android:name=".ui.path.PathActivity" />
-        <activity android:name=".ui.lesson.LessonActivity" />
-        <activity android:name=".ui.profile.ProfileActivity" />
-        
+        <activity android:name=".ui.auth.RegisterActivity" android:exported="false" />
+        <activity android:name=".ui.auth.SetupActivity" android:exported="false" />
+        <activity android:name=".ui.path.PathActivity" android:exported="false" />
+        <activity android:name=".ui.lesson.LessonActivity" android:exported="false" />
+        <activity android:name=".ui.profile.ProfileActivity" android:exported="false" />
     </application>
 </manifest>
