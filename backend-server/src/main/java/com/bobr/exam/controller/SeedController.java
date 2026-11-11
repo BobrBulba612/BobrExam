@@ -2,10 +2,20 @@ package com.bobr.exam.controller;
 
 import com.bobr.exam.model.Task;
 import com.bobr.exam.repository.TaskRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -14,50 +24,61 @@ import java.util.Map;
 public class SeedController {
 
     private final TaskRepository repo;
+    private final ObjectMapper om = new ObjectMapper();
 
-    public SeedController(TaskRepository repo) { this.repo = repo; }
+    public SeedController(TaskRepository repo) {
+        this.repo = repo;
+    }
 
-    private Task t(String subj, String exam, int year, String topic, int diff,
-                   String type, String q, String opts, String ans, String expl) {
-        Task t = new Task();
-        t.setSubject(subj); t.setExamType(exam); t.setYear(year); t.setTopic(topic);
-        t.setDifficulty(diff); t.setType(type); t.setQuestionText(q);
-        t.setOptionsJson(opts); t.setCorrectAnswer(ans); t.setExplanation(expl);
-        return t;
+    private void load(String file, List<Task> out) throws Exception {
+        ClassPathResource res = new ClassPathResource(file);
+        if (!res.exists()) {
+            return;
+        }
+        try (InputStream in = res.getInputStream()) {
+            JsonNode arr = om.readTree(in);
+            for (JsonNode n : arr) {
+                Task t = new Task();
+                t.setSubject(n.path("subject").asText());
+                t.setExamType(n.path("examType").asText());
+                t.setExamNumber(n.path("examNumber").asInt());
+                t.setYear(n.path("year").asInt());
+                t.setTopic(n.path("topic").asText());
+                t.setDifficulty(n.path("difficulty").asInt());
+                t.setType(n.path("type").asText());
+                t.setQuestionText(n.path("questionText").asText());
+                t.setCorrectAnswer(n.path("correctAnswer").asText());
+                t.setExplanation(n.path("explanation").asText());
+                t.setSource(n.path("source").asText());
+                JsonNode opts = n.path("options");
+                if (opts.isArray()) {
+                    t.setOptionsJson(om.writeValueAsString(opts));
+                }
+                out.add(t);
+            }
+        }
     }
 
     @PostMapping("/tasks")
-    public ResponseEntity<?> seed() {
+    public ResponseEntity<?> seed() throws Exception {
+        Map<String, Object> r = new HashMap<>();
         if (repo.count() > 0) {
-            Map<String,Object> r = new HashMap<>();
-            r.put("message","already seeded"); r.put("count", repo.count());
+            r.put("message", "already seeded");
+            r.put("count", repo.count());
             return ResponseEntity.ok(r);
         }
-        repo.save(t("Математика","ОГЭ",2024,"Дроби",1,"text_input",
-                "Найдите значение выражения: (15/8 - 1/4) : 2", null, "0.8125",
-                "Приведи дроби к общему знаменателю, затем раздели на 2."));
-        repo.save(t("Математика","ОГЭ",2024,"Проценты",2,"text_input",
-                "Товар стоил 800 рублей и подешевел на 15%. Сколько стоит теперь?", null, "680",
-                "Найди 15% от 800 и вычти из исходной цены."));
-        repo.save(t("Русский язык","ОГЭ",2024,"Орфоэпия",2,"multiple_choice",
-                "В каком слове верно выделена ударная гласная?",
-                "{\"options\":[\"звонИт\",\"звОнит\",\"звонит\"]}", "звонИт",
-                "У глагола звонить ударение падает на окончание."));
-        repo.save(t("Физика","ОГЭ",2024,"Механика",2,"text_input",
-                "Скорость 72 км/ч. Вырази в м/с.", null, "20",
-                "Раздели значение на 3.6."));
-        repo.save(t("Информатика","ОГЭ",2024,"Системы счисления",3,"text_input",
-                "Переведи 101101 из двоичной в десятичную.", null, "45",
-                "Сложи степени двойки для единичных разрядов."));
-
-        Map<String,Object> r = new HashMap<>();
-        r.put("message","seeded"); r.put("count", repo.count());
+        List<Task> batch = new ArrayList<>();
+        load("tasks_oge.json", batch);
+        load("tasks_ege.json", batch);
+        repo.saveAll(batch);
+        r.put("message", "seeded");
+        r.put("count", repo.count());
         return ResponseEntity.ok(r);
     }
 
     @GetMapping("/tasks/count")
     public ResponseEntity<?> count() {
-        Map<String,Object> r = new HashMap<>();
+        Map<String, Object> r = new HashMap<>();
         r.put("count", repo.count());
         return ResponseEntity.ok(r);
     }

@@ -1,6 +1,7 @@
 package com.bobr.exam.controller;
 
 import com.bobr.exam.dto.TaskDTO;
+import com.bobr.exam.dto.TaskPublic;
 import com.bobr.exam.model.Task;
 import com.bobr.exam.model.User;
 import com.bobr.exam.model.UserProgress;
@@ -9,9 +10,17 @@ import com.bobr.exam.repository.UserProgressRepository;
 import com.bobr.exam.repository.UserRepository;
 import com.bobr.exam.service.JwtService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,20 +43,59 @@ public class TaskController {
     }
 
     @GetMapping("/courses/{examType}/{subject}/path")
-    public ResponseEntity<List<Task>> path(@PathVariable String examType, @PathVariable String subject) {
-        return ResponseEntity.ok(tasks.findByExamTypeAndSubjectOrderByDifficultyAsc(examType, subject));
+    public ResponseEntity<List<TaskPublic>> path(@PathVariable String examType,
+                                                 @PathVariable String subject) {
+        List<Task> found = tasks
+                .findByExamTypeAndSubjectOrderByDifficultyAsc(examType, subject);
+        List<TaskPublic> out = new ArrayList<>();
+        for (Task t : found) {
+            out.add(TaskPublic.of(t));
+        }
+        return ResponseEntity.ok(out);
     }
 
     @GetMapping("/tasks/{id}")
     public ResponseEntity<?> one(@PathVariable UUID id) {
-        return tasks.findById(id)
-                .map(t -> ResponseEntity.ok((Object) t))
-                .orElseGet(() -> ResponseEntity.status(404).body("Task not found"));
+        Task t = tasks.findById(id).orElse(null);
+        if (t == null) {
+            return ResponseEntity.status(404).body("Task not found");
+        }
+        return ResponseEntity.ok(TaskPublic.of(t));
+    }
+
+    private String norm(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.trim().toLowerCase().replace(',', '.').replace(" ", "");
+    }
+
+    private boolean same(Task t, String user) {
+        String c = norm(t.getCorrectAnswer());
+        String u = norm(user);
+        if (u.isEmpty()) {
+            return false;
+        }
+        if (u.equals(c)) {
+            return true;
+        }
+        if ("text_input".equals(t.getType())) {
+            try {
+                double a = Double.parseDouble(u);
+                double b = Double.parseDouble(c);
+                return Math.abs(a - b) < 1e-9;
+            } catch (Exception ignored) {
+                return false;
+            }
+        }
+        return false;
     }
 
     @PostMapping("/progress/submit")
-    public ResponseEntity<?> submit(@RequestHeader(value = "Authorization", required = false) String auth,
-                                    @RequestBody TaskDTO.SubmitRequest req) {
+    public ResponseEntity<?> submit(
+            @RequestHeader(value = "Authorization", required = false) String auth,
+            @RequestBody TaskDTO.SubmitRequest req) {
+
         if (auth == null || !auth.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body("Missing token");
         }
@@ -56,21 +104,18 @@ public class TaskController {
             return ResponseEntity.status(401).body("Invalid token");
         }
         User user = users.findByEmail(jwt.extractEmail(token)).orElse(null);
-        if (user == null) return ResponseEntity.status(401).body("User not found");
-
+        if (user == null) {
+            return ResponseEntity.status(401).body("User not found");
+        }
         Task task = tasks.findById(req.getTaskId()).orElse(null);
-        if (task == null) return ResponseEntity.status(404).body("Task not found");
-
-        boolean correct = normalize(req.getUserAnswer()).equals(normalize(task.getCorrectAnswer()));
-        if (!correct && "text_input".equals(task.getType())) {
-            try {
-                double a = Double.parseDouble(normalize(req.getUserAnswer()));
-                double b = Double.parseDouble(normalize(task.getCorrectAnswer()));
-                correct = Math.abs(a - b) < 1e-9;
-            } catch (Exception ignored) { }
+        if (task == null) {
+            return ResponseEntity.status(404).body("Task not found");
         }
 
-        UserProgress p = progress.findByUserIdAndTaskId(user.getId(), task.getId()).orElse(null);
+        boolean correct = same(task, req.getUserAnswer());
+
+        UserProgress p = progress
+                .findByUserIdAndTaskId(user.getId(), task.getId()).orElse(null);
         if (p == null) {
             p = new UserProgress();
             p.setUserId(user.getId());
@@ -92,15 +137,10 @@ public class TaskController {
 
         TaskDTO.SubmitResponse r = new TaskDTO.SubmitResponse();
         r.setCorrect(correct);
-        r.setCorrectAnswer(task.getCorrectAnswer());
+        r.setCorrectAnswer(correct ? task.getCorrectAnswer() : null);
         r.setExplanation(task.getExplanation());
         r.setXp(user.getXp());
         r.setHearts(user.getHearts());
         return ResponseEntity.ok(r);
-    }
-
-    private String normalize(String s) {
-        if (s == null) return "";
-        return s.trim().toLowerCase().replace(',', '.').replace(" ", "");
     }
 }
