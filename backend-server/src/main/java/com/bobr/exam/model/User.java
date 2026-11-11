@@ -2,6 +2,7 @@ package com.bobr.exam.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -24,6 +25,10 @@ public class User {
     private String examType;
     private Integer grade;
     private String subjects;
+
+    private String language = "ru";
+    private String avatar = "beaver1";
+    private LocalDate lastActive;
 
     private Integer xp = 0;
     private Integer streak = 0;

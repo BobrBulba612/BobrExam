@@ -9,6 +9,7 @@ public class AuthDTO {
         private String email;
         private String nickname;
         private String password;
+        private String language;
     }
 
     @Data
@@ -21,10 +22,8 @@ public class AuthDTO {
     public static class TokenResponse {
         @JsonProperty("access_token")
         private String accessToken;
-
         @JsonProperty("token_type")
         private String tokenType = "Bearer";
-
         public TokenResponse(String accessToken) {
             this.accessToken = accessToken;
         }

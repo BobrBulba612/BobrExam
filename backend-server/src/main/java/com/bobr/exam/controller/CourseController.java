@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -34,7 +33,8 @@ public class CourseController {
     }
 
     private int gradeOf(Task t) {
-        return t.getGrade() == null ? 9 : t.getGrade();
+        Integer g = t.getGrade();
+        return (g == null || g == 0) ? 9 : g;
     }
 
     @GetMapping("/my")
@@ -53,26 +53,23 @@ public class CourseController {
         if (u.getGrade() == null || u.getSubjects() == null) {
             return ResponseEntity.status(400).body("Setup required");
         }
-
         List<String> subs = om.readValue(u.getSubjects(),
                 new TypeReference<List<String>>() { });
         int g = u.getGrade();
         List<Map<String, Object>> out = new ArrayList<>();
-
         for (String s : subs) {
             List<Task> all = tasks.findBySubjectOrderByGradeAscDifficultyAsc(s);
             List<Task> pick = new ArrayList<>();
             for (Task t : all) {
                 if (Math.abs(gradeOf(t) - g) <= 1) pick.add(t);
             }
+            if (pick.isEmpty()) pick = new ArrayList<>(all);
             pick.sort(Comparator
                     .comparingInt((Task t) -> Math.abs(gradeOf(t) - g))
                     .thenComparingInt(t -> t.getDifficulty() == null ? 1 : t.getDifficulty()));
-            if (pick.size() > 8) pick = new ArrayList<>(pick.subList(0, 8));
-
+            if (pick.size() > 10) pick = new ArrayList<>(pick.subList(0, 10));
             List<TaskPublic> pubs = new ArrayList<>();
             for (Task t : pick) pubs.add(TaskPublic.of(t));
-
             Map<String, Object> unit = new HashMap<>();
             unit.put("subject", s);
             unit.put("grade", g);

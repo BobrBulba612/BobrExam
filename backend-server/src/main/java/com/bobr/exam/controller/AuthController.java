@@ -23,41 +23,61 @@ public class AuthController {
         this.jwtService = jwtService;
     }
 
+    public static boolean strongPassword(String p) {
+        if (p == null || p.length() < 8) return false;
+        boolean low = false, up = false, dig = false;
+        for (char c : p.toCharArray()) {
+            if (Character.isDigit(c)) dig = true;
+            else if (Character.isUpperCase(c)) up = true;
+            else if (Character.isLowerCase(c)) low = true;
+        }
+        return low && up && dig;
+    }
+
+    public static String hash(String password) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] h = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(h);
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody AuthDTO.RegisterRequest req) throws Exception {
+        if (req.getEmail() == null || !req.getEmail().contains("@")) {
+            return ResponseEntity.badRequest().body("Invalid email");
+        }
+        if (req.getNickname() == null || req.getNickname().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Nickname required");
+        }
+        if (!strongPassword(req.getPassword())) {
+            return ResponseEntity.badRequest()
+                    .body("Password needs 8+ chars, a lowercase, an UPPERCASE letter and a digit");
+        }
         if (userRepository.existsByEmail(req.getEmail())) {
             return ResponseEntity.badRequest().body("Email already registered");
         }
+        if (userRepository.existsByNickname(req.getNickname())) {
+            return ResponseEntity.badRequest().body("Nickname already taken");
+        }
         User user = new User();
-        user.setEmail(req.getEmail());
-        user.setNickname(req.getNickname());
-        // Простое хеширование (в проде использовать BCrypt)
-        user.setPasswordHash(hashPassword(req.getPassword()));
+        user.setEmail(req.getEmail().trim());
+        user.setNickname(req.getNickname().trim());
+        user.setPasswordHash(hash(req.getPassword()));
+        user.setLanguage(req.getLanguage() == null ? "ru" : req.getLanguage());
         user.setXp(0);
         user.setStreak(0);
         user.setHearts(5);
         userRepository.save(user);
-        
         String token = jwtService.generateToken(user.getEmail());
         return ResponseEntity.ok(new AuthDTO.TokenResponse(token));
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthDTO.LoginRequest req) throws Exception {
-        User user = userRepository.findByEmail(req.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        if (!user.getPasswordHash().equals(hashPassword(req.getPassword()))) {
+        User user = userRepository.findByEmail(req.getEmail()).orElse(null);
+        if (user == null || !user.getPasswordHash().equals(hash(req.getPassword()))) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
-        
         String token = jwtService.generateToken(user.getEmail());
         return ResponseEntity.ok(new AuthDTO.TokenResponse(token));
-    }
-
-    private String hashPassword(String password) throws Exception {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
-        return Base64.getEncoder().encodeToString(hash);
     }
 }

@@ -10,16 +10,9 @@ import com.bobr.exam.repository.UserProgressRepository;
 import com.bobr.exam.repository.UserRepository;
 import com.bobr.exam.service.JwtService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -48,37 +41,27 @@ public class TaskController {
         List<Task> found = tasks
                 .findByExamTypeAndSubjectOrderByDifficultyAsc(examType, subject);
         List<TaskPublic> out = new ArrayList<>();
-        for (Task t : found) {
-            out.add(TaskPublic.of(t));
-        }
+        for (Task t : found) out.add(TaskPublic.of(t));
         return ResponseEntity.ok(out);
     }
 
     @GetMapping("/tasks/{id}")
     public ResponseEntity<?> one(@PathVariable UUID id) {
         Task t = tasks.findById(id).orElse(null);
-        if (t == null) {
-            return ResponseEntity.status(404).body("Task not found");
-        }
+        if (t == null) return ResponseEntity.status(404).body("Task not found");
         return ResponseEntity.ok(TaskPublic.of(t));
     }
 
     private String norm(String s) {
-        if (s == null) {
-            return "";
-        }
+        if (s == null) return "";
         return s.trim().toLowerCase().replace(',', '.').replace(" ", "");
     }
 
     private boolean same(Task t, String user) {
         String c = norm(t.getCorrectAnswer());
         String u = norm(user);
-        if (u.isEmpty()) {
-            return false;
-        }
-        if (u.equals(c)) {
-            return true;
-        }
+        if (u.isEmpty()) return false;
+        if (u.equals(c)) return true;
         if ("text_input".equals(t.getType())) {
             try {
                 double a = Double.parseDouble(u);
@@ -95,7 +78,6 @@ public class TaskController {
     public ResponseEntity<?> submit(
             @RequestHeader(value = "Authorization", required = false) String auth,
             @RequestBody TaskDTO.SubmitRequest req) {
-
         if (auth == null || !auth.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body("Missing token");
         }
@@ -104,13 +86,9 @@ public class TaskController {
             return ResponseEntity.status(401).body("Invalid token");
         }
         User user = users.findByEmail(jwt.extractEmail(token)).orElse(null);
-        if (user == null) {
-            return ResponseEntity.status(401).body("User not found");
-        }
+        if (user == null) return ResponseEntity.status(401).body("User not found");
         Task task = tasks.findById(req.getTaskId()).orElse(null);
-        if (task == null) {
-            return ResponseEntity.status(404).body("Task not found");
-        }
+        if (task == null) return ResponseEntity.status(404).body("Task not found");
 
         boolean correct = same(task, req.getUserAnswer());
 
@@ -133,6 +111,17 @@ public class TaskController {
         } else if (user.getHearts() > 0) {
             user.setHearts(user.getHearts() - 1);
         }
+
+        LocalDate today = LocalDate.now();
+        LocalDate last = user.getLastActive();
+        if (last == null) {
+            user.setStreak(1);
+        } else if (last.equals(today.minusDays(1))) {
+            user.setStreak(user.getStreak() + 1);
+        } else if (!last.equals(today)) {
+            user.setStreak(1);
+        }
+        user.setLastActive(today);
         users.save(user);
 
         TaskDTO.SubmitResponse r = new TaskDTO.SubmitResponse();
@@ -141,6 +130,7 @@ public class TaskController {
         r.setExplanation(task.getExplanation());
         r.setXp(user.getXp());
         r.setHearts(user.getHearts());
+        r.setStreak(user.getStreak());
         return ResponseEntity.ok(r);
     }
 }

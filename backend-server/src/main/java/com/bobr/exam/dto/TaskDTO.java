@@ -18,11 +18,26 @@ public class TaskDTO {
         private String explanation;
         private int xp;
         private int hearts;
+        private int streak;
     }
 
     @Data
     public static class SetupRequest {
         private Integer grade;
         private List<String> subjects;
+    }
+
+    @Data
+    public static class ProfileUpdateRequest {
+        private String nickname;
+        private String email;
+        private String avatar;
+        private String language;
+    }
+
+    @Data
+    public static class PasswordChangeRequest {
+        private String oldPassword;
+        private String newPassword;
     }
 }
