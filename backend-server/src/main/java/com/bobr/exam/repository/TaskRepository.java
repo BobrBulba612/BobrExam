@@ -8,5 +8,4 @@ import java.util.UUID;
 public interface TaskRepository extends JpaRepository<Task, UUID> {
     List<Task> findByExamTypeAndSubjectOrderByDifficultyAsc(String examType, String subject);
     List<Task> findBySubjectOrderByGradeAscDifficultyAsc(String subject);
-    List<Task> findBySubjectOrderByGradeAscDifficultyAsc(String subject);
 }

@@ -21,11 +21,10 @@ public class User {
     @Column(nullable = false)
     private String passwordHash;
 
-    private String examType; // OGE or EGE
+    private String examType;
     private Integer grade;
-    private Integer grade;
-    private String subjects; // JSON string e.g. ["math", "physics"]
-    
+    private String subjects;
+
     private Integer xp = 0;
     private Integer streak = 0;
     private Integer hearts = 5;
