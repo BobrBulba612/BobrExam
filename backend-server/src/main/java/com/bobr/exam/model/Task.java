@@ -24,6 +24,8 @@ public class Task {
     private String examType;
 
     private Integer examNumber;
+    private Integer grade;
+    private Integer grade;
 
     @Column(name = "exam_year")
     private Integer year;

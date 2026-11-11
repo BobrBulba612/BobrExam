@@ -22,6 +22,8 @@ public class User {
     private String passwordHash;
 
     private String examType; // OGE or EGE
+    private Integer grade;
+    private Integer grade;
     private String subjects; // JSON string e.g. ["math", "physics"]
     
     private Integer xp = 0;

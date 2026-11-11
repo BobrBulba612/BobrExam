@@ -30,7 +30,8 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> me(@RequestHeader(value = "Authorization", required = false) String auth) {
+    public ResponseEntity<?> me(
+            @RequestHeader(value = "Authorization", required = false) String auth) {
         User u = current(auth);
         if (u == null) return ResponseEntity.status(401).body("Unauthorized");
         u.setPasswordHash(null);
@@ -38,14 +39,21 @@ public class UserController {
     }
 
     @PostMapping("/setup")
-    public ResponseEntity<?> setup(@RequestHeader(value = "Authorization", required = false) String auth,
-                                   @RequestBody TaskDTO.SetupRequest req) throws Exception {
+    public ResponseEntity<?> setup(
+            @RequestHeader(value = "Authorization", required = false) String auth,
+            @RequestBody TaskDTO.SetupRequest req) throws Exception {
         User u = current(auth);
         if (u == null) return ResponseEntity.status(401).body("Unauthorized");
-        if (req.getSubjects() == null || req.getSubjects().isEmpty() || req.getSubjects().size() > 4) {
-            return ResponseEntity.badRequest().body("Select 1..4 subjects");
+        if (req.getGrade() == null || req.getGrade() < 5 || req.getGrade() > 11) {
+            return ResponseEntity.badRequest().body("Grade must be 5..11");
         }
-        u.setExamType(req.getExamType());
+        if (req.getSubjects() == null || req.getSubjects().isEmpty()
+                || req.getSubjects().size() > 5) {
+            return ResponseEntity.badRequest().body("Select 1..5 subjects");
+        }
+        u.setGrade(req.getGrade());
+        u.setExamType(req.getGrade() == 9 ? "ОГЭ"
+                : req.getGrade() >= 10 ? "ЕГЭ" : "ШКОЛА");
         u.setSubjects(om.writeValueAsString(req.getSubjects()));
         users.save(u);
         u.setPasswordHash(null);

@@ -6,11 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -32,15 +28,14 @@ public class SeedController {
 
     private void load(String file, List<Task> out) throws Exception {
         ClassPathResource res = new ClassPathResource(file);
-        if (!res.exists()) {
-            return;
-        }
+        if (!res.exists()) return;
         try (InputStream in = res.getInputStream()) {
             JsonNode arr = om.readTree(in);
             for (JsonNode n : arr) {
                 Task t = new Task();
                 t.setSubject(n.path("subject").asText());
                 t.setExamType(n.path("examType").asText());
+                t.setGrade(n.path("grade").asInt());
                 t.setExamNumber(n.path("examNumber").asInt());
                 t.setYear(n.path("year").asInt());
                 t.setTopic(n.path("topic").asText());
@@ -51,23 +46,24 @@ public class SeedController {
                 t.setExplanation(n.path("explanation").asText());
                 t.setSource(n.path("source").asText());
                 JsonNode opts = n.path("options");
-                if (opts.isArray()) {
-                    t.setOptionsJson(om.writeValueAsString(opts));
-                }
+                if (opts.isArray()) t.setOptionsJson(om.writeValueAsString(opts));
                 out.add(t);
             }
         }
     }
 
     @PostMapping("/tasks")
-    public ResponseEntity<?> seed() throws Exception {
+    public ResponseEntity<?> seed(
+            @RequestParam(defaultValue = "false") boolean force) throws Exception {
         Map<String, Object> r = new HashMap<>();
+        if (force) repo.deleteAll();
         if (repo.count() > 0) {
             r.put("message", "already seeded");
             r.put("count", repo.count());
             return ResponseEntity.ok(r);
         }
         List<Task> batch = new ArrayList<>();
+        load("tasks_school.json", batch);
         load("tasks_oge.json", batch);
         load("tasks_ege.json", batch);
         repo.saveAll(batch);

@@ -11,6 +11,8 @@ public class TaskPublic {
     private String subject;
     private String examType;
     private Integer examNumber;
+    private Integer grade;
+    private Integer grade;
     private Integer year;
     private String topic;
     private Integer difficulty;
@@ -25,6 +27,8 @@ public class TaskPublic {
         p.subject = t.getSubject();
         p.examType = t.getExamType();
         p.examNumber = t.getExamNumber();
+        p.grade = t.getGrade();
+        p.grade = t.getGrade();
         p.year = t.getYear();
         p.topic = t.getTopic();
         p.difficulty = t.getDifficulty();

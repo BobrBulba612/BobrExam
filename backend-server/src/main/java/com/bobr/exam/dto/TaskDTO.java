@@ -22,7 +22,7 @@ public class TaskDTO {
 
     @Data
     public static class SetupRequest {
-        private String examType;
+        private Integer grade;
         private List<String> subjects;
     }
 }
