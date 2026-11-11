@@ -1,24 +1,12 @@
-# Stage 1: Build the application with Maven
 FROM maven:3.9-eclipse-temurin-17 AS build
-WORKDIR /app
-
-# Copy pom.xml and download dependencies first (better caching)
+WORKDIR /build
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
-# Copy source code and build
+RUN mvn -B dependency:go-offline
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn -B clean package -DskipTests
 
-# Stage 2: Run the application with a lightweight JRE image
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
-
-# Copy the built jar from stage 1
-COPY --from=build /app/target/exam-backend-1.0.0.jar app.jar
-
-# Expose port (Render will inject $PORT automatically via ENV variable)
-EXPOSE 8000
-
-# Start command
-ENTRYPOINT ["java", "-jar", "app.jar"]
+COPY --from=build /build/target/exam-backend-1.0.0.jar app.jar
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=70 -XX:+UseSerialGC"
+ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar app.jar --server.port=${PORT:-8000} --server.address=0.0.0.0"]

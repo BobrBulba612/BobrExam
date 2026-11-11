@@ -1,5 +1,6 @@
 package com.bobr.exam.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 public class AuthDTO {
@@ -18,8 +19,14 @@ public class AuthDTO {
 
     @Data
     public static class TokenResponse {
+        @JsonProperty("access_token")
         private String accessToken;
+
+        @JsonProperty("token_type")
         private String tokenType = "Bearer";
-        public TokenResponse(String accessToken) { this.accessToken = accessToken; }
+
+        public TokenResponse(String accessToken) {
+            this.accessToken = accessToken;
+        }
     }
 }
