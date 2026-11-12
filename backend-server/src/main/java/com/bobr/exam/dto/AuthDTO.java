@@ -11,21 +11,32 @@ public class AuthDTO {
         private String password;
         private String language;
     }
-
     @Data
     public static class LoginRequest {
         private String email;
         private String password;
     }
-
+    @Data
+    public static class EmailRequest {
+        private String email;
+    }
+    @Data
+    public static class VerifyRequest {
+        private String email;
+        private String code;
+    }
+    @Data
+    public static class ResetRequest {
+        private String email;
+        private String code;
+        private String newPassword;
+    }
     @Data
     public static class TokenResponse {
         @JsonProperty("access_token")
         private String accessToken;
         @JsonProperty("token_type")
         private String tokenType = "Bearer";
-        public TokenResponse(String accessToken) {
-            this.accessToken = accessToken;
-        }
+        public TokenResponse(String accessToken) { this.accessToken = accessToken; }
     }
 }

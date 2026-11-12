@@ -5,6 +5,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ImageView;
+import android.animation.ObjectAnimator;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,6 +30,7 @@ public class LessonActivity extends AppCompatActivity {
     private EditText etAnswer;
     private LinearLayout optionsBox;
     private Button btnCheck, btnAi;
+    private ImageView ivBeaver;
 
     private List<ApiService.TaskDto> tasks = new ArrayList<>();
     private int index = 0;
@@ -52,6 +55,11 @@ public class LessonActivity extends AppCompatActivity {
         optionsBox = findViewById(R.id.optionsBox);
         btnCheck = findViewById(R.id.btnCheck);
         btnAi = findViewById(R.id.btnAi);
+        ivBeaver = findViewById(R.id.ivBeaver);
+        ObjectAnimator bb = ObjectAnimator.ofFloat(ivBeaver, "translationY", 0f, -14f, 0f);
+        bb.setDuration(1500);
+        bb.setRepeatCount(ObjectAnimator.INFINITE);
+        bb.start();
 
         String subject = getIntent().getStringExtra("subject");
         if (subject == null) subject = "Математика";

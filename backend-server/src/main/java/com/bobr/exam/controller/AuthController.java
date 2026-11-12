@@ -3,6 +3,8 @@ package com.bobr.exam.controller;
 import com.bobr.exam.dto.AuthDTO;
 import com.bobr.exam.model.User;
 import com.bobr.exam.repository.UserRepository;
+import com.bobr.exam.service.CodeStore;
+import com.bobr.exam.service.EmailService;
 import com.bobr.exam.service.JwtService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,10 +19,14 @@ public class AuthController {
 
     private final UserRepository userRepository;
     private final JwtService jwtService;
+    private final EmailService email;
+    private final CodeStore codes;
 
-    public AuthController(UserRepository userRepository, JwtService jwtService) {
-        this.userRepository = userRepository;
-        this.jwtService = jwtService;
+    public AuthController(UserRepository u, JwtService j, EmailService e, CodeStore c) {
+        this.userRepository = u;
+        this.jwtService = j;
+        this.email = e;
+        this.codes = c;
     }
 
     public static boolean strongPassword(String p) {
@@ -35,9 +41,46 @@ public class AuthController {
     }
 
     public static String hash(String password) throws Exception {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] h = digest.digest(password.getBytes(StandardCharsets.UTF_8));
-        return Base64.getEncoder().encodeToString(h);
+        MessageDigest d = MessageDigest.getInstance("SHA-256");
+        return Base64.getEncoder().encodeToString(d.digest(password.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @PostMapping("/send-code")
+    public ResponseEntity<?> sendCode(@RequestBody AuthDTO.EmailRequest req) {
+        if (req.getEmail() == null || !req.getEmail().contains("@")) {
+            return ResponseEntity.badRequest().body("Invalid email");
+        }
+        if (!email.configured()) {
+            return ResponseEntity.status(503).body("Mail not configured");
+        }
+        try {
+            String code = codes.issue(req.getEmail());
+            email.sendCode(req.getEmail(), code);
+            return ResponseEntity.ok("Code sent");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Mail error");
+        }
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestBody AuthDTO.VerifyRequest req) {
+        boolean ok = codes.verify(req.getEmail(), req.getCode());
+        return ok ? ResponseEntity.ok("Verified") : ResponseEntity.badRequest().body("Wrong or expired code");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody AuthDTO.ResetRequest req) throws Exception {
+        if (!codes.verify(req.getEmail(), req.getCode())) {
+            return ResponseEntity.badRequest().body("Wrong or expired code");
+        }
+        if (!strongPassword(req.getNewPassword())) {
+            return ResponseEntity.badRequest().body("Weak password");
+        }
+        User u = userRepository.findByEmail(req.getEmail()).orElse(null);
+        if (u == null) return ResponseEntity.status(404).body("User not found");
+        u.setPasswordHash(hash(req.getNewPassword()));
+        userRepository.save(u);
+        return ResponseEntity.ok("Password reset");
     }
 
     @PostMapping("/register")
@@ -49,8 +92,7 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Nickname required");
         }
         if (!strongPassword(req.getPassword())) {
-            return ResponseEntity.badRequest()
-                    .body("Password needs 8+ chars, a lowercase, an UPPERCASE letter and a digit");
+            return ResponseEntity.badRequest().body("Weak password");
         }
         if (userRepository.existsByEmail(req.getEmail())) {
             return ResponseEntity.badRequest().body("Email already registered");
@@ -67,8 +109,7 @@ public class AuthController {
         user.setStreak(0);
         user.setHearts(5);
         userRepository.save(user);
-        String token = jwtService.generateToken(user.getEmail());
-        return ResponseEntity.ok(new AuthDTO.TokenResponse(token));
+        return ResponseEntity.ok(new AuthDTO.TokenResponse(jwtService.generateToken(user.getEmail())));
     }
 
     @PostMapping("/login")
@@ -77,7 +118,6 @@ public class AuthController {
         if (user == null || !user.getPasswordHash().equals(hash(req.getPassword()))) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
-        String token = jwtService.generateToken(user.getEmail());
-        return ResponseEntity.ok(new AuthDTO.TokenResponse(token));
+        return ResponseEntity.ok(new AuthDTO.TokenResponse(jwtService.generateToken(user.getEmail())));
     }
 }
