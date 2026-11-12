@@ -1,0 +1,14 @@
+<resources>
+    <color name="bark_dark">#D7CCC8</color>
+    <color name="bark_light">#8D6E63</color>
+    <color name="leaf_green">#66BB6A</color>
+    <color name="leaf_light">#8BC34A</color>
+    <color name="amber">#FFC107</color>
+    <color name="cream">#121212</color>
+    <color name="white">#FFFFFF</color>
+    <color name="ic_launcher_background">#FFF8E1</color>
+    <color name="text_primary">#F5F5F5</color>
+    <color name="text_secondary">#D7CCC8</color>
+    <color name="bg_app">#121212</color>
+    <color name="panel_bg">#1E1E1E</color>
+</resources>

@@ -46,6 +46,7 @@ public class LessonActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lesson);
+        com.bobr.exam.ui.util.PressAnim.apply(this);
         tvQuestion = findViewById(R.id.tvQuestion);
         tvHearts = findViewById(R.id.tvHearts);
         tvXp = findViewById(R.id.tvXp);
@@ -171,7 +172,7 @@ public class LessonActivity extends AppCompatActivity {
                 stats();
                 if (s.correct) {
                     Toast.makeText(LessonActivity.this,
-                            "Верно! Бобр грызёт ветку", Toast.LENGTH_SHORT).show();
+                            "Верно!", Toast.LENGTH_SHORT).show();
                     index++;
                     show();
                 } else {
@@ -194,7 +195,7 @@ public class LessonActivity extends AppCompatActivity {
         if (tasks.isEmpty() || index >= tasks.size()) return;
         ApiService.TaskDto t = cur();
         String answer = etAnswer.getText().toString();
-        tvAi.setText("Бобр-Профессор думает...");
+        tvAi.setText("Профессор думает...");
         ApiService.AiRequest req = new ApiService.AiRequest(
                 t.id, t.examType, t.subject, t.questionText, answer);
         api.explain(req).enqueue(new Callback<ApiService.AiResponse>() {

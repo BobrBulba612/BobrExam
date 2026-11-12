@@ -3,6 +3,10 @@ package com.bobr.exam.ui.profile;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.EditText;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import android.widget.AdapterView;
+import com.bobr.exam.ui.util.ThemeHelper;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,6 +37,19 @@ public class ProfileActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
+        Spinner spTheme = findViewById(R.id.spTheme);
+        String[] themes = {"Системная", "Светлая", "Тёмная"};
+        spTheme.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, themes));
+        String saved = getSharedPreferences("bobr", MODE_PRIVATE).getString("theme", "system");
+        spTheme.setSelection(saved.equals("light") ? 1 : saved.equals("dark") ? 2 : 0);
+        spTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(AdapterView<?> p, android.view.View v, int pos, long id) {
+                String t = pos == 1 ? "light" : pos == 2 ? "dark" : "system";
+                ThemeHelper.save(ProfileActivity.this, t);
+            }
+            @Override public void onNothingSelected(AdapterView<?> p) { }
+        });
+        com.bobr.exam.ui.util.PressAnim.apply(this);
         etNick = findViewById(R.id.etNick);
         etEmail = findViewById(R.id.etEmail);
         etOldPass = findViewById(R.id.etOldPass);

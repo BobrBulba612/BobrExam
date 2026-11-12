@@ -16,6 +16,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.auth.RegisterActivity" android:exported="false" />
+        <activity android:name=".ui.auth.ForgotActivity" android:exported="false" />
         <activity android:name=".ui.auth.SetupActivity" android:exported="false" />
         <activity android:name=".ui.path.PathActivity" android:exported="false" />
         <activity android:name=".ui.lesson.LessonActivity" android:exported="false" />

@@ -68,6 +68,12 @@ public class AuthController {
         return ok ? ResponseEntity.ok("Verified") : ResponseEntity.badRequest().body("Wrong or expired code");
     }
 
+    @PostMapping("/check-code")
+    public ResponseEntity<?> checkCode(@RequestBody AuthDTO.VerifyRequest req) {
+        boolean ok = codes.peek(req.getEmail(), req.getCode());
+        return ok ? ResponseEntity.ok("Valid") : ResponseEntity.badRequest().body("Wrong or expired code");
+    }
+
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody AuthDTO.ResetRequest req) throws Exception {
         if (!codes.verify(req.getEmail(), req.getCode())) {

@@ -29,6 +29,7 @@ public class LeaderboardActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_leaderboard);
+        com.bobr.exam.ui.util.PressAnim.apply(this);
         RecyclerView rv = findViewById(R.id.rvLeader);
         rv.setLayoutManager(new LinearLayoutManager(this));
         Adapter ad = new Adapter();
@@ -57,7 +58,7 @@ public class LeaderboardActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull VH h, int position) {
             ApiService.LeaderEntry e = data.get(position);
             h.tv.setText(e.rank + ". " + e.nickname + "  —  " + e.xp + " XP  (стрик " + e.streak + ")");
-            h.tv.setTextColor(0xFF4E342E);
+            h.tv.setTextColor(androidx.core.content.ContextCompat.getColor(h.itemView.getContext(), R.color.text_primary));
         }
         @Override
         public int getItemCount() { return data.size(); }

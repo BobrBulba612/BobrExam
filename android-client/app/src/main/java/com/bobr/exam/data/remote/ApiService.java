@@ -12,6 +12,18 @@ import retrofit2.http.PUT;
 
 public interface ApiService {
 
+    @POST("api/auth/send-code")
+    Call<ResponseBody> sendCode(@Body EmailRequest body);
+
+    @POST("api/auth/check-code")
+    Call<ResponseBody> checkCode(@Body VerifyRequest body);
+
+    @POST("api/auth/verify-email")
+    Call<ResponseBody> verifyEmail(@Body VerifyRequest body);
+
+    @POST("api/auth/reset-password")
+    Call<ResponseBody> resetPassword(@Body ResetRequest body);
+
     @POST("api/auth/register")
     Call<AuthResponse> register(@Body RegisterRequest request);
 
@@ -48,6 +60,18 @@ public interface ApiService {
     class RegisterRequest {
         public String email; public String nickname; public String password; public String language;
         public RegisterRequest(String e, String n, String p, String l) { email=e; nickname=n; password=p; language=l; }
+    }
+    class EmailRequest {
+        public String email;
+        public EmailRequest(String e) { email = e; }
+    }
+    class VerifyRequest {
+        public String email; public String code;
+        public VerifyRequest(String e, String c) { email = e; code = c; }
+    }
+    class ResetRequest {
+        public String email; public String code; public String newPassword;
+        public ResetRequest(String e, String c, String p) { email = e; code = c; newPassword = p; }
     }
     class LoginRequest {
         public String email; public String password;

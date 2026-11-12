@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/bg_wood">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:orientation="vertical" android:gravity="center" android:padding="24dp">
+
+    <LinearLayout android:id="@+id/stepCode"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Шаг 1: подтверждение почты" android:textSize="20sp" android:textStyle="bold"
+            android:textColor="@color/text_secondary" android:layout_marginBottom="16dp"/>
+        <EditText android:id="@+id/etEmail" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:hint="Email" android:inputType="textEmailAddress"/>
+        <Button android:id="@+id/btnSend" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Отправить код" android:textColor="#FFFFFF" android:background="@drawable/btn_wood" android:layout_marginTop="8dp"/>
+        <EditText android:id="@+id/etCode" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:hint="Код из письма (6 цифр)" android:inputType="number" android:layout_marginTop="16dp"/>
+        <Button android:id="@+id/btnNext" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Подтвердить код" android:textColor="#FFFFFF" android:background="@drawable/btn_leaf" android:layout_marginTop="8dp"/>
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/stepPass"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:visibility="gone">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Шаг 2: новый пароль" android:textSize="20sp" android:textStyle="bold"
+            android:textColor="@color/text_secondary" android:layout_marginBottom="16dp"/>
+        <EditText android:id="@+id/etP1" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:hint="Новый пароль" android:inputType="textPassword"/>
+        <EditText android:id="@+id/etP2" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:hint="Повтори пароль" android:inputType="textPassword" android:layout_marginTop="8dp"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Минимум 8 символов: буква, ЗАГЛАВНАЯ и цифра" android:textSize="12sp"
+            android:textColor="@color/text_secondary"/>
+        <Button android:id="@+id/btnReset" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Сменить пароль" android:textColor="#FFFFFF" android:background="@drawable/btn_leaf" android:layout_marginTop="16dp"/>
+    </LinearLayout>
+</LinearLayout>
+</ScrollView>

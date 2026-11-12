@@ -38,6 +38,7 @@ public class PathActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_path);
+        com.bobr.exam.ui.util.PressAnim.apply(this);
         TextView title = findViewById(R.id.tvPathTitle);
         RecyclerView rv = findViewById(R.id.rvPath);
         rv.setLayoutManager(new LinearLayoutManager(this));

@@ -64,7 +64,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:padding="12dp"
-            android:background="@color/white"
+            android:background="@color/panel_bg"
             android:textColor="@color/bark_dark"/>
     </LinearLayout>
 </ScrollView>

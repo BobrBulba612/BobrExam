@@ -24,14 +24,18 @@ public class CodeStore {
         return code;
     }
 
-    public boolean verify(String key, String code) {
+    public boolean peek(String key, String code) {
         Entry e = map.get(key.toLowerCase());
         if (e == null) return false;
         if (Instant.now().getEpochSecond() > e.expires) {
             map.remove(key.toLowerCase());
             return false;
         }
-        boolean ok = e.code.equals(code);
+        return e.code.equals(code);
+    }
+
+    public boolean verify(String key, String code) {
+        boolean ok = peek(key, code);
         if (ok) map.remove(key.toLowerCase());
         return ok;
     }

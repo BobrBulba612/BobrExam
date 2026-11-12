@@ -3,7 +3,7 @@
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="vertical" android:background="@drawable/bg_wood">
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Рейтинг лесных жителей"
-        android:textSize="20sp" android:textStyle="bold" android:textColor="#4E342E" android:padding="16dp"/>
+        android:textSize="20sp" android:textStyle="bold" android:textColor="@color/text_secondary" android:padding="16dp"/>
     <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvLeader"
         android:layout_width="match_parent" android:layout_height="match_parent"/>
 </LinearLayout>

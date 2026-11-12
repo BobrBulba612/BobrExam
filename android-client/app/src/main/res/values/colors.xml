@@ -7,4 +7,8 @@
     <color name="cream">#FFF8E1</color>
     <color name="white">#FFFFFF</color>
     <color name="ic_launcher_background">#FFF8E1</color>
+    <color name="text_primary">#1B1B1B</color>
+    <color name="text_secondary">#4E342E</color>
+    <color name="bg_app">#FFF8E1</color>
+    <color name="panel_bg">#FFFFFF</color>
 </resources>

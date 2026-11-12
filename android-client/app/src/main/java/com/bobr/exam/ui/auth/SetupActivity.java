@@ -42,6 +42,7 @@ public class SetupActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setup);
+        com.bobr.exam.ui.util.PressAnim.apply(this);
         spGrade = findViewById(R.id.spGrade);
         LinearLayout box = findViewById(R.id.boxSubjects);
         Button btn = findViewById(R.id.btnSetup);
